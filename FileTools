@@ -1,0 +1,164 @@
+package com.example.menghe.tools;
+
+import android.content.Context;
+import android.util.Log;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * 文件操作工具类
+ *
+ * @author menghe
+ */
+public class FileTools {
+
+    /**
+     * 日志文件
+     */
+    private static final String TAG = "fileTools-TAG";
+
+
+    /**
+     * 创建文件
+     *
+     * @param fileDirectory 文件所在的目录
+     * @param fileName      文件名称
+     */
+    public static void fileCreate(String fileDirectory, String fileName) {
+        if (fileDirectory == null || "".equals(fileDirectory)) {
+            return;
+        }
+        File file = new File(fileDirectory);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        file = null;
+        file = new File(fileDirectory + File.separator + fileName);
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                Log.e(TAG, "FileTools.java:37 'file.createNewFile()' error");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * 针对Assets资源文件的文件操作
+     *
+     * @author menghe
+     */
+    public static class AssetsFileTools {
+
+
+        /**
+         * 复制文件
+         *
+         * @param context
+         * @param path    assets 资源文件中的绝对路径
+         * @param newPath Android 存储目录中的绝对路径
+         */
+        public static void copyFile(Context context, String path, String newPath) {
+            InputStream is = null;
+            FileOutputStream fos = null;
+            try {
+                is = context.getAssets().open(path);
+                fos = new FileOutputStream(new File(newPath));
+
+                byte[] buffer = new byte[1024];
+                int byteCount;
+                // 循环从输入流读取 buffer字节
+                while ((byteCount = is.read(buffer)) != -1) {
+                    // 将读取的输入流写入到输出流
+                    fos.write(buffer, 0, byteCount);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (is != null) {
+                    try {
+                        is.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (fos != null) {
+                    try {
+                        fos.flush();
+                        fos.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        /**
+         * 拷贝资源文件夹中的文件
+         *
+         * @param context
+         * @param folderPath    Ass中的文件路径 文件夹（相当于拷贝文件夹下所有文件）和文件都可
+         * @param newFolderPath 平板目录
+         */
+        public static void copyFolderFile(Context context, String folderPath, String newFolderPath) {
+
+            // 获取assets目录下的所有文件及目录名
+            String fileNames[] = new String[0];
+            try {
+                fileNames = context.getAssets().list(folderPath);
+            } catch (IOException e) {
+                Log.e(TAG, "copyFolderFile error: 'fileNames = context.getAssets().list(folderPath)'");
+                e.printStackTrace();
+            }
+            if (fileNames.length > 0) {
+                // 创建目录
+                new File(newFolderPath).mkdirs();
+
+                for (String fileName : fileNames) {
+                    copyFolderFile(context, folderPath + "/" + fileName, newFolderPath + "/" + fileName);
+                }
+            } else {
+                // 创建文件
+                InputStream is = null;
+                FileOutputStream fos = null;
+                try {
+                    is = context.getAssets().open(folderPath);
+                    fos = new FileOutputStream(new File(newFolderPath));
+
+                    byte[] buffer = new byte[1024];
+                    int byteCount;
+                    // 循环从输入流读取 buffer字节
+                    while ((byteCount = is.read(buffer)) != -1) {
+                        // 将读取的输入流写入到输出流
+                        fos.write(buffer, 0, byteCount);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }finally {
+                    if (is != null) {
+                        try {
+                            is.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (fos != null) {
+                        try {
+                            fos.flush();
+                            fos.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+            }
+        }
+
+    }
+}
